@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Legends of the League</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Legends of the League</h1>
+    </header>
+
+    <div class="main-content">
+      <div class="sidebar-left">
+        <div class="character-sheet" data-sport="volleyball">
+          <div class="header-section">
+            <input type="text" class="character-name" placeholder="NAME">
+            <input type="text" class="character-role" placeholder="ROLE">
+          </div>
+
+          <div class="abilities-section">
+            <h3>ABILITIES</h3>
+            <textarea class="abilities-list" placeholder="List abilities here..."></textarea>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <label>AGI</label>
+              <input type="number" value="0">
+              <button class="roll-button" data-stat="agi">Roll</button>
+            </div>
+            <div class="stat-box">
+              <label>ACT</label>
+              <input type="number" value="0">
+              <button class="roll-button" data-stat="act">Roll</button>
+            </div>
+            <div class="stat-box">
+              <label>INIT</label>
+              <input type="number" value="0">
+              <button class="roll-button" data-stat="init">Roll</button>
+            </div>
+            <div class="stat-box">
+              <label>STG</label>
+              <input type="number" value="0">
+              <button class="roll-button" data-stat="stg">Roll</button>
+            </div>
+          </div>
+
+          <div class="modifiers-section">
+            <h3>MODIFIERS</h3>
+            <div class="modifiers-grid">
+              <label><input type="checkbox" class="modifier" value="proficient"> Proficient</label>
+              <label><input type="checkbox" class="modifier" value="advantage"> Advantage</label>
+              <label><input type="checkbox" class="modifier" value="inspired"> Inspired</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-board-container">
+        <canvas id="game-board"></canvas>
+        <div class="map-selector">
+          <select id="map-select">
+            <option value="volleyball">Volleyball Court</option>
+            <option value="baseball">Baseball Field</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sport-controls">
+        <button id="home-score">Home Scores</button>
+        <button id="away-score">Away Scores</button>
+        <button id="next-period">Next Set/Inning</button>
+      </div>
+
+      <div class="score-display">
+        <div class="team-score" data-team="home">
+          <span class="team-name">Home</span>
+          <span class="points">0</span>
+        </div>
+
+        <div class="set-innings">
+          <span class="current-set">Set 1</span>
+          <span class="current-inning" style="display: none;">Inning 1</span>
+        </div>
+
+        <div class="team-score" data-team="away">
+          <span class="team-name">Away</span>
+          <span class="points">0</span>
+        </div>
+      </div>
+
+        <div class="dice-panel">
+          <h3>Dice Roller</h3>
+          <div class="dice-controls">
+            <input type="text" id="dice-expression" placeholder="e.g. 2d6+3">
+            <button id="roll-dice">Roll</button>
+          </div>
+          <div id="roll-results" class="roll-history"></div>
+        </div>
+    </div>
+  </div>
+
+  <div class="chat-panel">
+    <h3>Game Chat</h3>
+    <div class="chat-log"></div>
+    <input type="text" class="chat-input" placeholder="Type message...">
+    <button class="send-chat">Send</button>
+  </div>
+
+  <div class="login-panel">
+    <input type="text" id="login-username" placeholder="Username" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button id="login-btn">Login</button>
+    <input type="text" id="signup-username" placeholder="New Username" />
+    <input type="password" id="signup-password" placeholder="New Password" />
+    <button id="signup-btn">Sign Up</button>
+  </div>
+
+  <script src="sports.js"></script>
+  <script src="ai.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
