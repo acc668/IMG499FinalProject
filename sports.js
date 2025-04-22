@@ -1,4 +1,3 @@
-// ---------- sports.js (fixed) ----------
 class VolleyballGame extends SportsGameState {
   constructor() {
     super();
