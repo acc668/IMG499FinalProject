@@ -1,154 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="sports">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Legends of the League</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legends Arena | Sports TTRPG</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sports-theme.css">
 </head>
-<body>
-  <div class="app-container">
-    <header class="app-header">
-      <h1>Legends of the League</h1>
-    </header>
-
-    <div class="main-content">
-      <div class="sidebar-left">
-        <div class="character-sheet" data-sport="volleyball">
-          <div class="header-section">
-            <input type="text" class="character-name" placeholder="NAME">
-            <input type="text" class="character-role" placeholder="ROLE">
-          </div>
-
-          <div class="abilities-section">
-            <h3>ABILITIES</h3>
-            <textarea class="abilities-list" placeholder="List abilities here..."></textarea>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-box">
-              <label>AGI</label>
-              <input type="number" value="0">
-              <button class="roll-button" data-stat="agi">Roll</button>
-            </div>
-            <div class="stat-box">
-              <label>ACT</label>
-              <input type="number" value="0">
-              <button class="roll-button" data-stat="act">Roll</button>
-            </div>
-            <div class="stat-box">
-              <label>INIT</label>
-              <input type="number" value="0">
-              <button class="roll-button" data-stat="init">Roll</button>
-            </div>
-            <div class="stat-box">
-              <label>STG</label>
-              <input type="number" value="0">
-              <button class="roll-button" data-stat="stg">Roll</button>
-            </div>
-          </div>
-
-          <div class="modifiers-section">
-            <h3>MODIFIERS</h3>
-            <div class="modifiers-grid">
-              <label><input type="checkbox" class="modifier" value="proficient"> Proficient</label>
-              <label><input type="checkbox" class="modifier" value="advantage"> Advantage</label>
-              <label><input type="checkbox" class="modifier" value="inspired"> Inspired</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="game-board-container">
-        <canvas id="game-board"></canvas>
-        <div class="map-selector">
-          <select id="map-select">
-            <option value="volleyball">Volleyball Court</option>
-            <option value="baseball">Baseball Field</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="sport-controls">
-        <button id="home-score">Home Scores</button>
-        <button id="away-score">Away Scores</button>
-        <button id="next-period">Next Set/Inning</button>
-      </div>
-
+<body class="grid-layout">
+  <header class="app-header">
+    <div class="header-brand">
+      <img src="assets/logo.svg" alt="Legends Arena" class="logo">
+      <h1>Legends Arena</h1>
+    </div>
+    <div class="game-status">
+      <span class="sport-indicator volleyball">Volleyball Match</span>
       <div class="score-display">
-        <div class="team-score" data-team="home">
-          <span class="team-name">Home</span>
-          <span class="points">0</span>
-        </div>
-
-        <div class="set-innings">
-          <span class="current-set">Set 1</span>
-          <span class="current-inning" style="display: none;">Inning 1</span>
-        </div>
-
-        <div class="team-score" data-team="away">
-          <span class="team-name">Away</span>
-          <span class="points">0</span>
-        </div>
-      </div>
-
-        <div class="dice-panel">
-          <h3>Dice Roller</h3>
-          <div class="dice-controls">
-            <input type="text" id="dice-expression" placeholder="e.g. 2d6+3">
-            <button id="roll-dice">Roll</button>
-          </div>
-          <div id="roll-results" class="roll-history"></div>
-        </div>
-    </div>
-  </div>
-
-  <div class="chat-panel">
-    <h3>Game Chat</h3>
-    <div class="chat-log"></div>
-    <input type="text" class="chat-input" placeholder="Type message...">
-    <button class="send-chat">Send</button>
-  </div>
-
-  <div class="login-panel">
-    <input type="text" id="login-username" placeholder="Username" />
-    <input type="password" id="login-password" placeholder="Password" />
-    <button id="login-btn">Login</button>
-    <input type="text" id="signup-username" placeholder="New Username" />
-    <input type="password" id="signup-password" placeholder="New Password" />
-    <button id="signup-btn">Sign Up</button>
-  </div>
-
-  <div id="lobby" class="lobby-panel">
-    <h2>Create or Join Game</h2>
-    <div class="lobby-options">
-      <div class="create-game">
-        <h3>Create New Game</h3>
-        <select id="sport-select">
-          <option value="volleyball">Volleyball</option>
-          <option value="baseball">Baseball</option>
-        </select>
-        <button id="create-room-btn">Create Room</button>
-      </div>
-      <div class="join-game">
-        <h3>Join Existing Game</h3>
-        <input type="text" id="room-code" placeholder="Enter Room Code">
-        <button id="join-room-btn">Join Room</button>
+        <span class="team home">Home <span class="points">0</span></span>
+        <span class="timer">Set 1 | 12:34</span>
+        <span class="team away">Away <span class="points">0</span></span>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="sport-actions">
-    <button id="serve-btn" class="volleyball-only">Serve</button>
-    <button id="spike-btn" class="volleyball-only">Spike</button>
-    <button id="pitch-btn" class="baseball-only">Pitch</button>
-    <button id="swing-btn" class="baseball-only">Swing</button>
-  </div>
+  <main class="game-container">
+    <aside class="sidebar left">
+      <div class="player-card">
+        <div class="player-header">
+          <h3>Your Athlete</h3>
+          <div class="position-badge">OH</div>
+        </div>
+        <!-- Character sheet content -->
+      </div>
+    </aside>
 
-  <script src="sports.js"></script>
-  <script src="ai.js"></script>
-  <script src="app.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/uuid@latest/dist/umd/uuidv4.min.js"></script>
+    <section class="game-board">
+      <canvas id="game-canvas"></canvas>
+      <div class="game-controls">
+        <button class="btn-action" data-action="serve">Serve</button>
+        <button class="btn-action" data-action="spike">Spike</button>
+      </div>
+    </section>
+
+    <aside class="sidebar right">
+      <div class="game-log">
+        <h3>Play-by-Play</h3>
+        <div class="log-entries"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <div class="user-panel">
+      <span class="username">Player1</span>
+      <button class="btn-logout">Logout</button>
+    </div>
+  </footer>
 </body>
 </html>
