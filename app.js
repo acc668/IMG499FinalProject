@@ -1,8 +1,34 @@
-// Game board setup
 const canvas = document.getElementById('game-board');
 const ctx = canvas.getContext('2d');
 const mapManager = new MapManager();
 
+let lastTimestamp = 0;
+const fps = 60;
+const frameInterval = 1000 / fps;
+
+function gameLoop(timestamp) {
+  if (timestamp - lastTimestamp >= frameInterval) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    mapManager.drawCurrentMap();
+    drawTokens();
+    renderSportsUI();
+
+    if (fogOfWar.enabled) redrawFogOfWar();
+
+    lastTimestamp = timestamp;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+function initGame() {
+  resizeCanvas();
+  initEventListeners();
+  requestAnimationFrame(gameLoop); // Start the loop
+}
+
+window.addEventListener('load', initGame);
 
 function snapToGrid(x, y)
 {
@@ -22,14 +48,10 @@ function resizeCanvas() {
   canvas.width = container.clientWidth;
   canvas.height = container.clientHeight;
   
-  // Update fog of war canvas
-  if (fogOfWar?.canvas) {
-    fogOfWar.canvas.width = canvas.width;
-    fogOfWar.canvas.height = canvas.height;
-  }
-  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   mapManager.drawCurrentMap();
   drawTokens();
+  renderSportsUI();
   if (fogOfWar.enabled) redrawFogOfWar();
 }
 
@@ -73,8 +95,7 @@ resizeCanvas();
 
 class Token
 {
-  constructor(x, y, imageUrl, id)
-  {
+  constructor(x, y, imageUrl, id, team = 'home', position = 'default') {
     this.id = id || crypto.randomUUID();
     this.x = x;
     this.y = y;
@@ -86,6 +107,15 @@ class Token
     initTokenDrag(this);
     this.visionRange = 200;
     this.hasVision = true;
+    this.team = team;
+    this.position = position;
+    this.isServing = false;
+    this.stats = {
+      str: 10,
+      agi: 10,
+      init: 10,
+      act: 10
+    };
   }
 
   handleMove(newX, newY) {
@@ -115,7 +145,6 @@ class Token
       revealAreaAt(this.x, this.y);
     }
   }
-}
 
   draw()
   {
@@ -126,16 +155,26 @@ class Token
     ctx.clip();
     ctx.drawImage(this.image, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
     ctx.restore();
+    ctx.fillStyle = this.team === 'home' ? '#3a8ee6' : '#e64c3c';
+    ctx.beginPath();
+    ctx.arc(this.x + this.size/2 - 5, this.y + this.size/2 - 5, 10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.position[0], this.x + this.size/2 - 5, this.y + this.size/2 - 5);
 
-    if (this.selected)
+    if (this.isServing)
     {
-      ctx.strokeStyle = 'blue';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'gold';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size / 2 + 2, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, this.size/2 + 5, 0, Math.PI*2);
       ctx.stroke();
     }
   }
+}
 
 function rollDice(expression)
 {
@@ -895,3 +934,84 @@ function initMap() {
   const gridSize = mapManager.maps[mapManager.currentMap].gridSize;
   mapManager.drawGrid(gridSize);
 }
+
+function renderSportsUI() {
+  if (!gameState.currentSport) return;
+
+  document.querySelectorAll('.sport-ui').forEach(el => el.remove());
+
+  switch(gameState.currentSport) {
+    case 'baseball':
+      renderBaseballUI();
+      break;
+    case 'volleyball':
+      renderVolleyballUI();
+      break;
+  }
+}
+
+function renderBaseballUI() {
+  const ui = document.createElement('div');
+  ui.className = 'sport-ui baseball-ui';
+  ui.innerHTML = `
+    <div class="count-display">
+      <span>B: <span class="balls">${gameState.balls}</span></span>
+      <span>S: <span class="strikes">${gameState.strikes}</span></span>
+      <span>O: <span class="outs">${gameState.outs}</span></span>
+    </div>
+    <div class="bases">
+      <div class="base ${gameState.bases[0] ? 'occupied' : ''}"></div>
+      <div class="base ${gameState.bases[1] ? 'occupied' : ''}"></div>
+      <div class="base ${gameState.bases[2] ? 'occupied' : ''}"></div>
+    </div>
+  `;
+  document.body.appendChild(ui);
+}
+
+function renderVolleyballUI() {
+  const ui = document.getElementById('volleyball-ui') || createSportsUI('volleyball');
+
+  const homePlayers = gameState.players.filter(p => p.team === 'home');
+  const awayPlayers = gameState.players.filter(p => p.team === 'away');
+  
+  updateRotationDisplay(ui.querySelector('.home-rotation'), homePlayers);
+  updateRotationDisplay(ui.querySelector('.away-rotation'), awayPlayers);
+}
+
+function createSportsUI(sport) {
+  const container = document.createElement('div');
+  container.id = `${sport}-ui`;
+  container.className = `${sport}-ui`;
+  
+  if (sport === 'baseball') {
+    container.innerHTML = `
+      <div class="base-count">
+        <span>Balls: <span class="balls">0</span></span>
+        <span>Strikes: <span class="strikes">0</span></span>
+        <span>Outs: <span class="outs">0</span></span>
+      </div>
+      <div class="bases">
+        <div class="base base-1"></div>
+        <div class="base base-2"></div>
+        <div class="base base-3"></div>
+      </div>
+    `;
+  } else if (sport === 'volleyball') {
+    container.innerHTML = `
+      <h4>Rotation</h4>
+      <div class="home-rotation"></div>
+      <div class="away-rotation"></div>
+    `;
+  }
+  
+  document.body.appendChild(container);
+  return container;
+}
+
+document.getElementById('serve-btn').addEventListener('click', () => {
+  gameState.executeAction({ type: 'serve' });
+});
+
+document.getElementById('pitch-btn').addEventListener('click', () => {
+  gameState.executeAction({ type: 'pitch' });
+});
