@@ -1,4 +1,3 @@
-// ---------- ai.js (fixed) ----------
 class SportsAI {
   constructor(gameState, difficulty = 'medium') {
     this.gameState = gameState;
