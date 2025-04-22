@@ -1,26 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-page">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Legends of the League</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="UTF-8">
+  <title>Join the League | Legends Arena</title>
+  <link rel="stylesheet" href="css/auth.css">
 </head>
-
 <body>
-  <div class="app-container">
-    <header class="app-header">
-      <h1>Legends of the League</h1>
-    </header>
-
-    <div class="signup-panel">
-        <input type="text" id="signup-username" placeholder="New Username" />
-        <input type="password" id="signup-password" placeholder="New Password" />
-        <button id="signup-btn">Sign Up</button>
+  <div class="auth-container signup-mode">
+    <div class="auth-header">
+      <img src="assets/logo.svg" alt="Legends Arena" class="logo">
+      <h2>Create Your Legacy</h2>
+      <p>Join the premier sports TTRPG experience</p>
     </div>
+    
+    <form id="signup-form" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="username">Team ID</label>
+          <input type="text" id="username" placeholder="Choose username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Team Email</label>
+          <input type="email" id="email" placeholder="your@team.com" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">Playbook Code</label>
+          <input type="password" id="password" placeholder="Create password" required>
+          <div class="password-strength"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirm-password">Verify Code</label>
+          <input type="password" id="confirm-password" placeholder="Confirm password" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="position">Primary Position</label>
+        <select id="position" required>
+          <option value="">Select your role</option>
+          <option value="quarterback">Quarterback</option>
+          <option value="striker">Striker</option>
+          <option value="libero">Libero</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn-primary">Start Your Journey</button>
+      
+      <div class="auth-footer">
+        <p>Already have a team? <a href="login.html">Report to the arena</a></p>
+      </div>
+    </form>
   </div>
-
-  <script src="signUp.js"></script>
-
 </body>
 </html>
