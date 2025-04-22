@@ -262,3 +262,90 @@
   border-left: 4px solid #e64c3c;
   background-color: #fce8e8;
 }
+
+/* Resizable Panels */
+.sidebar-left, .sidebar-right {
+  resize: horizontal;
+  overflow: auto;
+  min-width: 200px;
+  max-width: 400px;
+}
+
+/* Token Styling */
+.token {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: absolute;
+  cursor: move;
+  transition: transform 0.2s;
+}
+
+.token:hover {
+  transform: scale(1.1);
+  z-index: 1000;
+}
+
+/* Layer Management */
+#game-board {
+  position: relative;
+}
+
+.token-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.fog-of-war {
+  position: absolute;
+  background: rgba(0,0,0,0.7);
+  transition: opacity 0.3s;
+}
+
+.visible-area {
+  clip-path: polygon(/* dynamic polygon */);
+}
+
+.lobby-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  z-index: 10000;
+  display: none;
+}
+
+.lobby-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.create-game, .join-game {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.gm-controls {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.fog-of-war {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
