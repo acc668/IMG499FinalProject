@@ -4,12 +4,33 @@ const ctx = canvas.getContext('2d');
 const mapManager = new MapManager();
 
 
-function resizeCanvas()
+function snapToGrid(x, y)
 {
-  canvas.width = window.innerWidth * 0.6;
-  canvas.height = window.innerHeight * 0.8;
+  if (!mapManager.currentMap) return { x, y };
+
+  const gridSize = mapManager.maps[mapManager.currentMap].gridSize;
+  return{
+    x: Math.round(x / gridSize) * gridSize,
+    y: Math.round(y / gridSize) * gridSize,
+    gridX: Math.round(x / gridSize),
+    gridY: Math.round(y / gridSize)
+  };
+}
+
+function resizeCanvas() {
+  const container = document.querySelector('.game-board-container');
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  
+  // Update fog of war canvas
+  if (fogOfWar?.canvas) {
+    fogOfWar.canvas.width = canvas.width;
+    fogOfWar.canvas.height = canvas.height;
+  }
+  
   mapManager.drawCurrentMap();
   drawTokens();
+  if (fogOfWar.enabled) redrawFogOfWar();
 }
 
 
@@ -52,14 +73,49 @@ resizeCanvas();
 
 class Token
 {
-  constructor(x, y, imageUrl)
+  constructor(x, y, imageUrl, id)
   {
+    this.id = id || crypto.randomUUID();
     this.x = x;
     this.y = y;
     this.size = 40;
     this.image = new Image();
     this.image.src = imageUrl;
+    this.element = document.createElement('div');
+    this.element.className = 'token';
+    initTokenDrag(this);
+    this.visionRange = 200;
+    this.hasVision = true;
   }
+
+  handleMove(newX, newY) {
+    if (this.snapToGrid) {
+      const snapped = snapToGrid(newX, newY);
+      this.x = snapped.x;
+      this.y = snapped.y;
+    } else {
+      this.x = newX;
+      this.y = newY;
+    }
+    
+    this.updateVision();
+    this.draw();
+  }
+
+  updateVision() {
+    const visibleCells = calculateLOS(
+      this.x, 
+      this.y, 
+      this.visionRange,
+      mapManager.currentMap.walls
+    );
+    socket.emit('updateVision', visibleCells);
+
+    if (this.hasVision && roomManager.isGM) {
+      revealAreaAt(this.x, this.y);
+    }
+  }
+}
 
   draw()
   {
@@ -80,7 +136,6 @@ class Token
       ctx.stroke();
     }
   }
-}
 
 function rollDice(expression)
 {
@@ -153,6 +208,14 @@ class DiceRoller
   {
     const result = this.parseDiceExpression(expression);
     result.total += modifier;
+
+    socket.emit('diceRoll', {
+      expression,
+      rolls: result.rolls,
+      modifier,
+      total: result.total,
+      characterName: gameState.activePlayer?.name
+    });
 
     this.chatSystem.addDiceRoll({
       expression,
@@ -270,6 +333,10 @@ class CharacterSheet
       `;
       document.querySelector('.chat-log').appendChild(chatEntry);
     }
+
+    calculateDerivedStats() {
+      this.defense = 10 + Math.floor(this.agi/2);
+    }
   }
   
 
@@ -300,6 +367,27 @@ class CharacterSheet
           backgroundColor: '#e3b778'
         }
       };
+    }
+
+    drawGrid(gridSize) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+    
+      // Vertical lines
+      for (let x = 0; x <= canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+    
+      // Horizontal lines
+      for (let y = 0; y <= canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
     }
   
     drawCurrentMap()
@@ -376,6 +464,14 @@ class CharacterSheet
         ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 2, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+
+    addLayer(type) {
+      this.layers.push({
+        type, // background, token, lighting
+        visible: true,
+        locked: false
+      });
     }
   }
   
@@ -540,6 +636,13 @@ class CharacterSheet
           true
         );
       });
+    }
+
+    startInitiative() {
+      this.initiativeOrder = this.players.map(p => ({
+        player: p,
+        roll: rollDice('1d20') + p.stats.init
+      })).sort((a,b) => b.roll - a.roll);
     }
   }
   
@@ -721,3 +824,74 @@ document.getElementById('roll-dice').addEventListener('click', () => {
     alert('Invalid dice expression. Use something like 1d20+2.');
   }
 });
+
+class Permissions {
+  constructor() {
+    this.roles = {
+      GM: ['moveAll', 'revealFog', 'editMaps'],
+      Player: ['moveOwned', 'rollDice']
+    };
+  }
+}
+
+function initDragAndDrop() {
+  document.addEventListener('drop', (e) => {
+    const token = new Token(
+      e.clientX, 
+      e.clientY,
+      e.dataTransfer.getData('tokenImage')
+    );
+    gameState.addToken(token);
+  });
+}
+
+let fogOfWar = {
+  enabled: true,
+  canvas: document.createElement('canvas'),
+  revealedAreas: []
+};
+
+function initFogOfWar(initialFog) {
+  fogOfWar = { ...initialFog };
+  fogOfWar.canvas.width = canvas.width;
+  fogOfWar.canvas.height = canvas.height;
+  redrawFogOfWar();
+}
+
+function redrawFogOfWar() {
+  const fogCtx = fogOfWar.canvas.getContext('2d');
+  
+  // Clear and draw base fog
+  fogCtx.clearRect(0, 0, fogOfWar.canvas.width, fogOfWar.canvas.height);
+  fogCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  fogCtx.fillRect(0, 0, fogOfWar.canvas.width, fogOfWar.canvas.height);
+  
+  // Cut out revealed areas
+  fogCtx.globalCompositeOperation = 'destination-out';
+  fogOfWar.revealedAreas.forEach(area => {
+    fogCtx.beginPath();
+    fogCtx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
+    fogCtx.fill();
+  });
+  
+  // Draw to main canvas
+  ctx.drawImage(fogOfWar.canvas, 0, 0);
+}
+
+function revealAreaAt(x, y) {
+  if (!roomManager.isGM) return;
+  
+  const revealRadius = 150;
+  roomManager.socket.emit('revealArea', {
+    roomId: roomManager.currentRoom,
+    x: x,
+    y: y,
+    radius: revealRadius
+  });
+}
+
+function initMap() {
+  resizeCanvas();
+  const gridSize = mapManager.maps[mapManager.currentMap].gridSize;
+  mapManager.drawGrid(gridSize);
+}
